@@ -200,7 +200,7 @@ export const getAdminApplications = async (
   next: NextFunction
 ): Promise<void> => {
   try { 
-    const { jobId, status, page = '1', limit = '10', sortBy = 'appliedAt', sortOrder = 'desc' } = req.query;
+    const { jobId, status, college, branch, page = '1', limit = '10', sortBy = 'appliedAt', sortOrder = 'desc' } = req.query;
 
     const query: any = {};
     if (jobId && mongoose.Types.ObjectId.isValid(jobId as string)) {
@@ -208,6 +208,15 @@ export const getAdminApplications = async (
     }
     if (status) {
       query.status = status;
+    }
+    if (college || branch) {
+      const profileQuery: any = {};
+      if (college) profileQuery.college = {$regex: String(college), $options: 'i'};
+      if (branch) profileQuery.degree = {$regex: String(branch), $options: 'i'};
+
+      const profile = await
+      StudentProfile.find(profileQuery).select('userId'); 
+      query.studentid = { $in: profile.map(p =>p.userId) };
     }
     const currentPage = Math.max(1,Number(page)|| 1);
     const pageSize = Math.min(100,Math.max(1,Number(limit)|| 10));

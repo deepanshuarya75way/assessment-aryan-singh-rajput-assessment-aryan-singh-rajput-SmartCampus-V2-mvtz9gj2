@@ -23,9 +23,12 @@ export const AdminApplicationsPage: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await adminService.getApplications({
+      const data = await 
+      adminService.getApplications({
         jobId: selectedJobId || undefined,
-        status: selectedStatus || undefined
+        status: selectedStatus || undefined,
+        page: currentPages,
+        limit: 10
       });
       setApplications(data.data || []);
       setTotalPages(data.pagination?.totalPages || 1);
@@ -34,7 +37,7 @@ export const AdminApplicationsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedJobId, selectedStatus]);
+  }, [selectedJobId, selectedStatus, currentPages]);
 
   useEffect(() => {
     const fetchJobsList = async () => {
@@ -108,7 +111,10 @@ export const AdminApplicationsPage: React.FC = () => {
             <select
               className="form-select"
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setCurrentPages(1);
+              }}
             >
               <option value="">All Pipeline Stages</option>
               <option value="Applied">Applied</option>
@@ -184,6 +190,25 @@ export const AdminApplicationsPage: React.FC = () => {
           </table>
         </div>
       )}
+      <div style={{ display: 'flex', justifyContent:
+        'center' , alignItems: 'center', gap: '1rem', padding: '1rem'}}>
+          <button
+          disabled= {currentPages <= 1}
+          onClick={()=> setCurrentPages(currentPages-1)}
+          >
+            previous
+            </button>
+            <span>Pages {currentPages} of {totalPages}</
+            span>
+
+            <button
+            disabled={currentPages >= totalPages}
+            onClick= {() => setCurrentPages(currentPages+ 1)}
+            >
+            Next
+
+            </button>
+        </div>
     </div>
   );
 };
