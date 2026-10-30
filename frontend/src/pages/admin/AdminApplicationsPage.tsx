@@ -16,6 +16,8 @@ export const AdminApplicationsPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const[currentPages, setCurrentPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const fetchApplications = useCallback(async () => {
     try {
@@ -25,7 +27,8 @@ export const AdminApplicationsPage: React.FC = () => {
         jobId: selectedJobId || undefined,
         status: selectedStatus || undefined
       });
-      setApplications(data);
+      setApplications(data.data || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch applications.');
     } finally {

@@ -31,11 +31,31 @@ export const adminService = {
     return res.data.data || [];
   },
 
-  async getApplications(params?: { jobId?: string; status?: string }): Promise<Application[]> {
-    const res = await api.get<ApiResponse<Application[]>>('/admin/applications', { params });
-    return res.data.data || [];
-  },
+  async getApplications(params?: {
+    jobId?: string; 
+    status?: string; 
+    page?: number; 
+    limit?: number;
+  }): Promise<ApiResponse<Application[]> & {
+    pagination?: {
+     page: number;
+     limit: number;
+     total: number;
+     totalPages: number;
+  };
+}> {
+  const res = await
+api.get<ApiResponse<Application[]> & {
+  pagination?:{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages:number;
+  };
+}>('admin/applications',{params});
 
+return res.data;
+},
   async updateApplicationStatus(id: string, status: string): Promise<Application> {
     const res = await api.patch<ApiResponse<Application>>(`/admin/applications/${id}/status`, { status });
     return res.data.data!;

@@ -199,8 +199,8 @@ export const getAdminApplications = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  try {
-    const { jobId, status } = req.query;
+  try { 
+    const { jobId, status, page = '1', limit = '10', sortBy = 'appliedAt', sortOrder = 'desc' } = req.query;
 
     const query: any = {};
     if (jobId && mongoose.Types.ObjectId.isValid(jobId as string)) {
@@ -209,23 +209,38 @@ export const getAdminApplications = async (
     if (status) {
       query.status = status;
     }
+    const currentPage = Math.max(1,Number(page)|| 1);
+    const pageSize = Math.min(100,Math.max(1,Number(limit)|| 10));
+    const sortField = ['appliedAt', 'createdAt'].includes(String(sortBy)) ?
+    String(sortBy) : 'appliedAt';
+    const sortDirection =sortOrder === 'asc' ? 1 : -1;
 
-    const applications = await Application.find(query)
-      .populate('studentId', 'name email')
-      .populate('jobId', 'title company location employmentType')
-      .sort({ appliedAt: -1 });
-
+    const [applications, total] = await Promise.all([
+      Application.find(query)
+        .populate('studentid', 'name email')
+        .populate('jobld, title company location employmentTypes')
+        .sort({[sortField]: sortDirection})
+        .skip((currentPage - 1)* pageSize)
+        .limit(pageSize),
+      Application.countDocuments(query)
+    ]);  
+   
     res.status(200).json({
       success: true,
       message: 'Applications retrieved.',
-      count: applications.length,
-      data: applications
-    });
-  } catch (error) {
+      count:  total,
+      data: applications, pagination:{
+        page : currentPage,
+        limit : pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+  });
+  } catch (error){
     next(error);
   }
 };
-
+  
 export const updateApplicationStatus = async (
   req: AuthenticatedRequest,
   res: Response,
